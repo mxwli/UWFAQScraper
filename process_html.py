@@ -87,27 +87,33 @@ def seekQNAPairs(tree):
 	for ch in tree['children']:
 		if type(ch) == str:
 			continue
-		if (seeking == 'none'):
-			if re.fullmatch(r'h[1234]?|summary', ch['type']):
-				content = cleanHeader(getFlattenedContent(ch))
-				if (isPossibleQuestion(content)):
-					seeking = 'header'
-					curQ = content
-		elif (seeking == 'header'):
+		if (seeking == 'header'):
 			if ch['type'] in {'p', 'ul', 'ol'}:
 				curA.append(cleanParagraph(getFlattenedContent(ch)))
 			else:
+				if (len(curA) == 0):
+					curA.append(cleanParagraph(getFlattenedContent(ch)))
 				ret.append((curQ, '\n'.join(curA)))
 				seeking = 'none'
 				curQ = ''
 				curA = []
 		elif (seeking == 'summary'):
-			if ch['type'] == 'div':
-				curA.append(cleanParagraph(getFlattenedContent(ch)))
+			curA.append(cleanParagraph(getFlattenedContent(ch)))
 			ret.append((curQ, '\n'.join(curA)))
 			seeking = 'none'
 			curQ = ''
 			curA = []
+		if (seeking == 'none'):
+			if re.fullmatch(r'h[1234]?', ch['type']):
+				content = cleanHeader(getFlattenedContent(ch))
+				if (isPossibleQuestion(content)):
+					seeking = 'header'
+					curQ = content
+			elif ch['type'] == 'summary':
+				content = cleanHeader(getFlattenedContent(ch))
+				if (isPossibleQuestion(content)):
+					seeking = 'summary'
+					curQ = content
 
 	if (len(ret) == 0):
 		for ch in tree['children']:
