@@ -44,6 +44,8 @@ class HTMLTree:
 				dat = self.chunks.pop()[1].strip()
 				if len(dat) > 0:
 					self.tree['children'] += [dat]
+			else:
+				self.chunks.pop()
 
 def parseHTML(text):
 	c = Chunker()
@@ -52,11 +54,11 @@ def parseHTML(text):
 
 def cleanHeader(header):
 	header = header.replace(u'\xa0', ' ')
-	return header.lower().strip().replace('\n', ' ')
+	return header.strip().replace('\n', ' ')
 
 def cleanParagraph(par):
 	par = par.replace(u'\xa0', ' ')
-	return par.lower().strip().replace('\n', ' ')
+	return par.strip().replace('\n', ' ')
 
 def getFlattenedContent(tree):
 	contents = []
@@ -70,11 +72,12 @@ def getFlattenedContent(tree):
 def isPossibleQuestion(text):
 	flag = text.endswith("?")
 	for word in 'who what where when why how'.split():
-		flag = flag or text.startswith(word)
+		flag = flag or text.lower().startswith(word)
 	return flag
 
 def isPossibleFaqPage(url, text):
-	return 'faq' in url or 'asked' in url or 'faq' in text or 'frequently asked questions' in text
+	tmp = text.lower()
+	return 'faq' in url or 'asked' in url or 'faq' in tmp or 'frequently asked questions' in tmp
 
 def seekQNAPairs(tree):
 	ret = []
@@ -85,27 +88,26 @@ def seekQNAPairs(tree):
 		if type(ch) == str:
 			continue
 		if (seeking == 'none'):
-			if re.fullmatch(r'h[1234]?', ch['type']):
+			if re.fullmatch(r'h[1234]?|summary', ch['type']):
 				content = cleanHeader(getFlattenedContent(ch))
 				if (isPossibleQuestion(content)):
 					seeking = 'header'
 					curQ = content
-		if (seeking == 'header'):
+		elif (seeking == 'header'):
 			if ch['type'] in {'p', 'ul', 'ol'}:
 				curA.append(cleanParagraph(getFlattenedContent(ch)))
 			else:
 				ret.append((curQ, '\n'.join(curA)))
-				seeking = False
+				seeking = 'none'
 				curQ = ''
 				curA = []
-		if (seeking == 'summary'):
+		elif (seeking == 'summary'):
 			if ch['type'] == 'div':
 				curA.append(cleanParagraph(getFlattenedContent(ch)))
-			else:
-				ret.append((curQ, '\n'.join(curA)))
-				seeking = False
-				curQ = ''
-				curA = []
+			ret.append((curQ, '\n'.join(curA)))
+			seeking = 'none'
+			curQ = ''
+			curA = []
 
 	if (len(ret) == 0):
 		for ch in tree['children']:
@@ -118,10 +120,11 @@ con = duckdb.connect(database = "persistent.duckdb", read_only = False)
 alldata = con.execute("select * from pages").fetchall()
 
 for url, text, hash in alldata:
+	print(f"processing {url}")
 	tree = parseHTML(text)
 	pairs = seekQNAPairs(tree)
-	if len(pairs) < 7 and not isPossibleFaqPage(url, text):
-		continue
-	for q, a in pairs:
-		con.execute("insert into qna (question, answer, source) values (?, ?, ?)",
-			  [q, a, url])
+	print(f"found {len(pairs)} pairs in {url}\n")
+	if len(pairs) >= 7 or isPossibleFaqPage(url, text):
+		for q, a in pairs:
+			con.execute("insert into qna (question, answer, source) values (?, ?, ?)",
+				[q, a, url])

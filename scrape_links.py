@@ -11,6 +11,8 @@ pages schema: (url varchar, text varchar, hash int128)
 '''
 
 def is_uwaterloo(text):
+	if 'archive' in text or 'profile' in text or 'people' in text:
+		return False
 	return text.startswith("/") or (text.startswith('https://') and 'uwaterloo.ca' in text)
 
 def process_href(text):
