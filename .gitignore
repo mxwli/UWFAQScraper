@@ -164,3 +164,4 @@ cython_debug/
 persistent.duckdb
 persistent.duckdb.wal
 checkpoints/
+models/
