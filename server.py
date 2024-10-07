@@ -7,7 +7,7 @@ model_Q = gensim.models.Doc2Vec.load("models/model_Q_vector_size_100_window_8_mi
 model_A = gensim.models.Doc2Vec.load("models/model_A_vector_size_100_window_8_min_count_5_workers_20_epochs_17_negative_15_sample_1e-5")
 model_QA = gensim.models.Doc2Vec.load("models/model_QA_vector_size_100_window_8_min_count_5_workers_20_epochs_17_negative_15_sample_1e-5")
 
-PORT = 8000
+PORT = 7999
 
 class RequestHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -23,12 +23,13 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/json; charset=utf-8')
         msg = 'invalid post type'
+        post_input = gensim.utils.simple_preprocess(post_data['input'])
         if post_data['type'] == 'Q':
-            msg = json.dumps(list(map(float, model_Q.infer_vector(post_data['input']))))
+            msg = json.dumps(list(map(float, model_Q.infer_vector(post_input, epochs=20))))
         elif post_data['type'] == 'A':
-            msg = json.dumps(list(map(float, model_A.infer_vector(post_data['input']))))
+            msg = json.dumps(list(map(float, model_A.infer_vector(post_input, epochs=20))))
         elif post_data['type'] == 'QA':
-            msg = json.dumps(list(map(float, model_QA.infer_vector(post_data['input']))))
+            msg = json.dumps(list(map(float, model_QA.infer_vector(post_input, epochs=20))))
         self.send_header('Content-length', len(msg))
         self.end_headers()
         self.wfile.write(bytes(msg, 'utf8'))
