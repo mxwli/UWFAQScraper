@@ -59,8 +59,22 @@ def get_links(url, text):
 
 con = duckdb.connect(database = "persistent.duckdb", read_only = False)
 prv_urls = list(map(lambda x: x[0], con.execute("select url from pages").fetchall()))
-
 visited = set(prv_urls)
+
+print("1 for manual input, 2 for scraping")
+___t = input()
+while (___t == '1'):
+	print("enter url")
+	url = input()
+	if (url == ''):
+		print("empty url. terminating")
+		exit(0)
+	text = get_text(url, con)
+	if (url not in visited):
+		print("url unexplored. inserting.")
+		con.execute("INSERT INTO pages VALUES (?, ?, ?)", [url, text, hash(url)])
+		visited.add(url)
+
 queue = set(zip(range(len(prv_urls)), prv_urls))
 topiter = len(prv_urls) + 1
 cnt = 2000 # number of new links to scrape
