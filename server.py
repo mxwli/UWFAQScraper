@@ -3,9 +3,9 @@ import http.server
 import socketserver
 import json
 
-model_Q = gensim.models.Doc2Vec.load("models/model_Q_vector_size_100_window_8_min_count_5_workers_20_epochs_17_negative_15_sample_1e-5")
-model_A = gensim.models.Doc2Vec.load("models/model_A_vector_size_100_window_8_min_count_5_workers_20_epochs_17_negative_15_sample_1e-5")
-model_QA = gensim.models.Doc2Vec.load("models/model_QA_vector_size_100_window_8_min_count_5_workers_20_epochs_17_negative_15_sample_1e-5")
+model_Q = gensim.models.Doc2Vec.load("models/model_Q_vector_size_100_window_8_min_count_5_workers_20_epochs_32_negative_15_sample_1e-5")
+model_A = gensim.models.Doc2Vec.load("models/model_A_vector_size_100_window_8_min_count_5_workers_20_epochs_32_negative_15_sample_1e-5")
+model_QA = gensim.models.Doc2Vec.load("models/model_QA_vector_size_100_window_8_min_count_5_workers_20_epochs_32_negative_15_sample_1e-5")
 
 PORT = 7999
 
