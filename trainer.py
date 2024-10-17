@@ -1,6 +1,7 @@
 import pandas as pd, gensim, duckdb
 from data_preprocessor import DataPreprocessor
 import random
+from meaninference import MeanInference
 
 # fetch dataset
 print("fetching dataset")
@@ -47,26 +48,32 @@ documents_QA = [gensim.models.doc2vec.TaggedDocument(preprocessor.full_preproces
 
 print("generating model Q")
 # generate model
-model_Q = gensim.models.Doc2Vec(documents_Q, vector_size=100, window=4, min_count=1, workers=20, epochs=10, negative=15, sample=1e-5, dm=1)
-model_Q.save("models/model_Q_vector_size_100_window_4_min_count_1_workers_20_epochs_10_negative_15_sample_1e-5_dm_1")
+model_Q = gensim.models.Doc2Vec(documents_Q, vector_size=100, window=7, min_count=1, workers=20, epochs=40, negative=15, sample=1e-5, dm=1)
+model_Q.save("models/model_Q_vector_size_100_window_7_min_count_1_workers_20_epochs_40_negative_15_sample_1e-5_dm_1")
 
 print("generating model A")
-model_A = gensim.models.Doc2Vec(documents_A, vector_size=100, window=4, min_count=1, workers=20, epochs=10, negative=15, sample=1e-5, dm=1)
-model_A.save("models/model_A_vector_size_100_window_4_min_count_1_workers_20_epochs_10_negative_15_sample_1e-5_dm_1")
+model_A = gensim.models.Doc2Vec(documents_A, vector_size=100, window=7, min_count=1, workers=20, epochs=40, negative=15, sample=1e-5, dm=1)
+model_A.save("models/model_A_vector_size_100_window_7_min_count_1_workers_20_epochs_40_negative_15_sample_1e-5_dm_1")
 
 print("generating model QA")
-model_QA = gensim.models.Doc2Vec(documents_QA, vector_size=100, window=4, min_count=1, workers=20, epochs=10, negative=15, sample=1e-5, dm=1)
-model_QA.save("models/model_QA_vector_size_100_window_4_min_count_5_workers_20_epochs_10_negative_15_sample_1e-5_dm_1")
+model_QA = gensim.models.Doc2Vec(documents_QA, vector_size=100, window=7, min_count=1, workers=20, epochs=40, negative=15, sample=1e-5, dm=1)
+model_QA.save("models/model_QA_vector_size_100_window_7_min_count_5_workers_20_epochs_40_negative_15_sample_1e-5_dm_1")
 
 print("testing model")
-model_Q_index = gensim.similarities.MatrixSimilarity([model_Q.dv[i] for i in range(408)], num_features=100)
-# model_A_index = gensim.similarities.MatrixSimilarity(model_A.dv)
-# model_QA_index = gensim.similarities.MatrixSimilarity(model_QA.dv)
+print(preprocessor.words)
+
+def cosineSimilarity(a, b):
+    return sum(a * b) / sum(a*a)**0.5 / sum(b*b)**0.5
+
+def euclidDistance(a, b):
+    return -sum((a-b)*(a-b))**0.5
+
 while True:
-    print("enter query")
-    query = preprocessor.full_preprocess(input())
-    print("processed to " + str(query))
-    inferrence = model_Q.infer_vector(query, epochs=100)
-    highest = model_Q_index[inferrence].argmax()
-    print(qna_master["question"][highest])
+    print("enter word")
+    query = input()
+    query_embedding = model_QA.wv[query]
+    print("processed to " + str(query_embedding))
+    results = sorted([(euclidDistance(model_QA.wv[word], query_embedding), word) for word in preprocessor.words], reverse=True)
+    print(results[:5])
+
 

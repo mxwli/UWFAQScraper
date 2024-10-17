@@ -11,8 +11,9 @@ class DataPreprocessor:
             "flc": "financial literacy competition".split(),
             "iep": "individual education plan".split(),
             "oat": "online academic tools".split(),
-            "casper": "computer based assessment for sampling personal characteristics".split(),
-            "od": "doctor of optometry".split()
+            "casper": "computer based assessment sampling personal characteristics".split(),
+            "od": "doctor optometry".split(),
+            "pd": "professional development".split()
         }
         ret = []
         for token in tokenizedDocument:
